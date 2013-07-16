@@ -1,0 +1,23 @@
+#!/bin/bash
+mc-log "[mc-restart-warning-short] Starting"
+if [[ "`mc-server-running`" ]]; then
+    mc-tell-server 'say Warning! Restarting in 5 seconds!'
+    sleep 1
+    if [[ "`mc-server-running`" ]]; then
+        mc-tell-server 'say Warning! Restarting in 4 seconds!'
+        sleep 1
+        if [[ "`mc-server-running`" ]]; then
+            mc-tell-server 'say Warning! Restarting in 3 seconds!'
+            sleep 1
+            if [[ "`mc-server-running`" ]]; then
+                mc-tell-server 'say Warning! Restarting in 2 seconds!'
+                sleep 1
+                if [[ "`mc-server-running`" ]]; then
+                    mc-tell-server 'say Warning! Restarting in 1 second!'
+                    sleep 1
+                fi
+            fi
+        fi
+    fi
+fi
+mc-log "[mc-restart-warning-short] Done"

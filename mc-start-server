@@ -1,0 +1,9 @@
+#!/bin/bash
+if [[ "`mc-server-running`" ]]; then
+    mc-log "[mc-start-server] Server already running"
+else
+    mc-log "[mc-start-server] Starting server"
+    mc-pre-start-actions
+    screen -dmS mcserver mc-start
+    mc-enable-script
+fi

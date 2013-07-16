@@ -1,0 +1,45 @@
+#!/bin/bash
+mc-log "[mc-pre-start-actions] Starting"
+if [[ -a "$HOME/server/plugins/CraftBukkitUpToDate/CraftBukkitUpToDate.sav" ]]; then
+   rm -f "$HOME/server/plugins/CraftBukkitUpToDate/CraftBukkitUpToDate.sav"
+fi
+if [[ -a "$HOME/server/bukkitupdate/plugins/changelog/" ]]; then
+    rm -rf "$HOME/server/bukkitupdate/plugins/changelog/"
+fi
+log="$HOME/logs/`date +%Y-%m-%d`.log"
+cd "$HOME/server/bukkitupdate/plugins/"
+for worldedit in worldedit*.zip; do continue; done
+if [[ -f "$worldedit" ]]; then
+    mc-log "[mc-pre-start-actions] Unzipping WorldEdit"
+    unzip "$worldedit" "WorldEdit.jar" >> "$log"
+fi
+for worldguard in worldguard*.zip; do continue; done
+if [[ -f "$worldguard" ]]; then
+    mc-log "[mc-pre-start-actions] Unzipping WorldGuard"
+    unzip "$worldguard" "WorldGuard.jar" >> "$log"
+fi
+for essentials in Essentials*.zip; do continue; done
+if [[ -f "$essentials" ]]; then
+        mc-log "[mc-pre-start-actions] Moving Essentials"
+        mv "$essentials" "$HOME/server/essentials.zip"
+fi
+for zipfile in $HOME/server/bukkitupdate/plugins/*.zip; do
+    if [[ -f $zipfile ]]; then
+        mc-log "[mc-pre-start-actions] Removing zip $zipfile"
+        rm -f "$zipfile"
+    fi
+done
+for pluginmove in $HOME/server/bukkitupdate/plugins/*.jar; do
+    if [[ -f "$pluginmove" ]]; then
+        mc-log "[mc-pre-start-actions] Moving $pluginmove to plugins-new"
+        mv "$pluginmove" "$HOME/server/plugins-new/"
+    fi
+done
+for pluginmove2 in $HOME/server/plugins-accepted/*.jar; do
+    if [[ -f "$pluginmove2" ]]; then
+        mc-log "[mc-pre-start-actions] Moving $pluginmove2 to plugins-accepted"
+        mv "$pluginmove2" "$HOME/server/plugins/"
+    fi
+done
+mc-download-latest
+mc-log "[mc-pre-start-actions] Done"

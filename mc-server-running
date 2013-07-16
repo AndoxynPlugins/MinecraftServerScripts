@@ -1,0 +1,4 @@
+#!/bin/bash
+if [[ "`pidof java`" ]]; then
+    echo "true"
+fi

@@ -1,0 +1,9 @@
+#!/bin/bash
+mc-log "[mc-kill-start] Starting"
+mc-kill-server
+while [[ "`mc-server-running`" ]]; do
+    sleep 1
+done
+mc-start-server
+mc-log "[mc-kill-start] Done"
+s

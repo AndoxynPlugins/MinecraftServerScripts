@@ -1,0 +1,13 @@
+#!/bin/bash
+i=0
+while [[ "$i" < "9" ]]; do
+    if [[ -a "$HOME/server/server.log.$i.lck" ]]; then
+        mc-log "[mc-check-multiple-logs] Removed server.log.$i.lck"
+        rm -f "$HOME/server/server.log.$i.lck"
+    fi
+    if [[ -a "$HOME/server/server.log.$i" ]]; then
+        mc-log "[mc-check-multiple-logs] Removed server.log.$i"
+        rm -f "$HOME/server/server.log.$i"
+    fi
+    i="`expr $i + 1`"
+done

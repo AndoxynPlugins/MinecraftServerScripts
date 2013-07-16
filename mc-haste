@@ -1,0 +1,2 @@
+#!/bin/bash
+( echo "% $@"; eval "$@" ) | curl -s -S -F "$@=<-" http://paste.md-5.net/documents | awk -F '"' '{print "http://paste.md-5.net/"$4.sh}'

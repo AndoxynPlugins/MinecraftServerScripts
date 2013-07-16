@@ -1,0 +1,10 @@
+#!/bin/bash
+if [[ ! -d "$HOME/logs" ]]; then
+    if [[ -a "$HOME/logs" ]]; then
+        mv "$HOME/logs" "$HOME/logs_bak"
+    fi
+    mkdir "$HOME/logs"
+fi
+log="$HOME/logs/`date +%Y-%m-%d`.log"
+touch "$log"
+echo "$(date +%Y/%m/%d) $(date +%H:%M) $@" >> "$log"

@@ -1,0 +1,3 @@
+#!/bin/bash
+mc-log "[mc-boot] Running"
+mc-start-server
