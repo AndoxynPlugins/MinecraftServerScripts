@@ -1,0 +1,45 @@
+#!/bin/bash
+if [[ ! "$1" ]]; then
+    echo "Please specify the jar file"
+    echo "Usage: mc-spigot-update <SpigotJarFileToTest | FileToDownloadJar>"
+    exit
+fi
+if [[ -a "$jarFile.new" ]]; then
+    echo "$jarFile.new exists. Please delete it."
+    exit
+fi
+jarFile=$1
+latestVersion="git-Spigot-`curl -s http://ci.md-5.net/job/Spigot/lastBuild/buildNumber`"
+if [[ -a "$jarFile" ]]; then
+    currentVersion="`java -jar $jarFile --version`"
+else
+    currentVersion="none"
+fi
+if [[ "$currentVersion" != "$latestVersion" ]]; then
+    echo "Spigot outdated, current=$currentVersion, latest=$latestVersion"
+    echo "Downloading..."
+    wget "http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar" -O "$jarFile.new"
+    ok="`java -jar $jarFile.new --version`"
+    times=0
+    until [[ "$ok" || "$times" -gt "5" ]]; do
+        rm -f "$jarFile.new"
+        echo "Downloaded jar corrupt, not giving version."
+        echo "Downloading..."
+        wget "http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar" -O "$jarFile.new"
+        ok="`java -jar $jarFile.new --version`"
+        times="`expr $times + 1`"
+    done
+    if [[ "$ok" ]]; then
+        echo "[mc-download-latest] Download successful"
+        echo "[mc-download-latest] Deploying"
+        if [[ -a "$jarFile" ]]; then
+            rm -f "$jarFile"
+        fi
+        mv "$jarFile.new" "$jarFile"
+    else
+        echo "Downloaded 5 corrupt jars, giving up now D:"
+        rm -f "$jarFile.new"
+    fi
+else
+    mc-log "$jarFile up to date"
+fi
