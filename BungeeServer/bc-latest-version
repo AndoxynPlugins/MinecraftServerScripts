@@ -1,0 +1,4 @@
+#!/bin/bash
+version="`curl -s http://ci.md-5.net/job/BungeeCord/lastBuild/buildNumber`"
+bc-log "[bc-latest-version] Latest build: $version"
+echo "git-Spigot-$version"

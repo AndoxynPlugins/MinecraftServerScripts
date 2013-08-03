@@ -1,0 +1,11 @@
+#!/bin/bash
+bc-log "[bc-persistent-start] Starting"
+bc-disable-script
+while [[ "`bc--server-running`" ]]; do
+    bc-log "[bc-persistent-start] Server already running"
+    sleep 1s
+done
+bc-log "[bc-persistent-start] Starting server"
+bc-pre-start-actions
+screen -dmS mcserver bc-start
+bc-enable-script

@@ -7,4 +7,4 @@ if [[ ! -d "$HOME/logs" ]]; then
 fi
 log="$HOME/logs/`date +%Y-%m-%d`.log"
 touch "$log"
-echo "$(date +%Y/%m/%d) $(date +%H:%M) $@" >> "$log"
+echo "$log"

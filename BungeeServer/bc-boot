@@ -1,0 +1,3 @@
+#!/bin/bash
+bc-log "[bc-boot] Running"
+bc-start-server

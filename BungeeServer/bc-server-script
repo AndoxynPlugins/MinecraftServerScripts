@@ -1,0 +1,12 @@
+#!/bin/bash
+if [[ `bc-script-enabled` ]]; then
+    if [[ "`bc-server-running`" ]]; then
+        bc-log "[bc-server-script] Server running"
+    else
+        bc-log "[bc-server-script] Restarting server"
+        bc-kill-server
+        bc-start-server
+    fi
+else
+    bc-log "[bc-server-script] Script disabled"
+fi

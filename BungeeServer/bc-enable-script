@@ -1,0 +1,7 @@
+#!/bin/bash
+if [[ -a "$HOME/.script-disabled" ]]; then
+    bc-log "[bc-enable-script] Enabling script"
+    rm -f "$HOME/.script-disabled"
+else
+    bc-log "[bc-enable-script] Script already enabled"
+fi

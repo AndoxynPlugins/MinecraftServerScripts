@@ -1,0 +1,15 @@
+#!/bin/bash
+if [[ "`bc-server-running`" ]]; then
+    bc-log "[bc-stop-server] Stopping server"
+    bc-tell-server "kickall Server is restarting"
+    bc-tell-server "stop"
+    timeout="`expr 120 + $(date '+%s')`"
+    while [[ "`bc-server-running`" ]]; do
+        if [[ "`date '+%s'`" -gt "$timeout" ]]; then
+            bc-kill-server
+        fi
+        sleep 1s
+    done
+else
+    bc-log "[bc-stop-server] Server not running"
+fi

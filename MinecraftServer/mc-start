@@ -1,0 +1,6 @@
+#!/bin/bash
+jarfile="$HOME/jars/spigot.jar"
+mc-log "[mc-start] Running jar $jarfile"
+cd "$HOME/server/"
+java -Xms1g -Xmx1536m -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=128m -jar "$jarfile" --log-strip-color
+mc-log "[mc-start] Done"

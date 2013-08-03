@@ -1,0 +1,6 @@
+#!/bin/bash
+jarfile="$HOME/jars/bungee.jar"
+bc-log "[bc-start] Running jar $jarfile"
+cd "$HOME/server/"
+java -Xmx256m -XX:+CMSClassUnloadingEnabled -jar "$jarfile" --log-strip-color
+bc-log "[bc-start] Done"

@@ -1,9 +1,8 @@
 #!/bin/bash
 mc-log "[mc-kill-server] Starting"
-killall -9 java
+killall -u "`whoami`" -9 java
 screen -wipe
 if [[ -a "$HOME/server/server.log.lck" ]]; then
     rm -f "$HOME/server/server.log.lck"
 fi
-mc-check-multiple-logs
 mc-log "[mc-kill-server] Done"

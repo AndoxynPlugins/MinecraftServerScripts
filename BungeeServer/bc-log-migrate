@@ -1,0 +1,14 @@
+#!/bin/bash
+currentDate="$(date +%Y-%m-%d)"
+if [[ -a "$HOME/logarchives/$currentDate" ]]; then
+    bc-log "[bc-log-migrate] ${currentDate} already exists"
+    numb='1'
+    while [[ -a "$HOME/logarchives/${currentdate}-${numb}.log" ]]; do
+        numb1="$(($numb1 + 1))"
+    done
+    bc-log "[bc-log-migrate] Migrating log to ${currentDate}-${numb}.log"
+    mv "$HOME/server/proxy.log.0" "$HOME/logarchives/${currentDate}-${numb}.log"
+else
+    bc-log "[bc-log-migrate] Migrating log to ${currentDate}.log"
+    mv "$HOME/server/proxy.log.0" "$HOME/logarchives/${currentDate}.log"
+fi

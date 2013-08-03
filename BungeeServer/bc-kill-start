@@ -1,0 +1,9 @@
+#!/bin/bash
+bc-log "[bc-kill-start] Starting"
+bc-kill-server
+while [[ "`bc-server-running`" ]]; do
+    sleep 1
+done
+bc-start-server
+bc-log "[bc-kill-start] Done"
+s

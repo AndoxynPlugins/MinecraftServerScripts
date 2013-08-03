@@ -1,0 +1,10 @@
+#!/bin/bash
+bc-log "[bc-backup] Starting"
+log="`bc-get-log`"
+backuplocation="file:///mnt/backup/`whoami`"
+duplicity --no-encryption \
+    --log-file="$log" \
+    --name "server-backup" \
+    --full-if-older-than 1W \
+    "$HOME/server" "$backuplocation" >> "$log"
+bc-log "[bc-backup] Done"

@@ -1,0 +1,5 @@
+#!/bin/bash
+bc-log "[bc-tell-server] Running: $@"
+screen -X -S bcserver stuff "
+$@
+"

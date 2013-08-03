@@ -4,28 +4,28 @@ latestversion="`mc-latest-version`"
 if [[ "$currentversion" != "$latestversion" ]]; then
     mc-log "[mc-download-latest] Server outdated"
     mc-log "[mc-download-latest] Downloading..."
-    wget "http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar" -O "$HOME/server/spigot.jar.new"
-    ok="`java -jar $HOME/server/spigot.jar.new --version`"
+    wget "http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar" -O "$HOME/jars/spigot.jar.new"
+    ok="`java -jar $HOME/jars/spigot.jar.new --version`"
     times=0
     until [[ "$ok" || "$times" -gt "5" ]]; do
-        rm -f "$HOME/server/spigot.jar.new"
+        rm -f "$HOME/jars/spigot.jar.new"
         mc-log "[mc-download-latest] Downloaded jar corrupt"
         mc-log "[mc-download-latest] Downloading..."
-        wget "http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar" -O "$HOME/server/spigot.jar.new"
-        ok="`java -jar $HOME/server/spigot.jar.new --version`"
+        wget "http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar" -O "$HOME/jars/spigot.jar.new"
+        ok="`java -jar $HOME/jars/spigot.jar.new --version`"
         times="`expr $times + 1`"
     done
     if [[ "$ok" ]]; then
         mc-log "[mc-download-latest] Download successful"
         mc-log "[mc-download-latest] Deploying"
-        if [[ -a "$HOME/server/spigot.jar" ]]; then
-            rm -f "$HOME/server/spigot.jar"
+        if [[ -a "$HOME/jars/spigot.jar" ]]; then
+            rm -f "$HOME/jars/spigot.jar"
         fi
-        mv "$HOME/server/spigot.jar.new" "$HOME/server/spigot.jar"
+        mv "$HOME/jars/spigot.jar.new" "$HOME/jars/spigot.jar"
     else
         mc-log "[mc-download-latest] Downloaded 5 corrupt jars"
         mc-log "[mc-download-latest] Giving up"
-        rm -f "$HOME/server/spigot.jar.new"
+        rm -f "$HOME/jars/spigot.jar.new"
     fi
 else
     mc-log "[mc-download-latest] Server up to date"

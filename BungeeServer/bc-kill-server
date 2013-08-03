@@ -1,0 +1,8 @@
+#!/bin/bash
+bc-log "[bc-kill-server] Starting"
+killall -u "`whoami`" -9 java
+screen -wipe
+if [[ -a "$HOME/server/proxy.log.0.lck" ]]; then
+    rm -f "$HOME/server/proxy.log.0.lck"
+fi
+bc-log "[bc-kill-server] Done"

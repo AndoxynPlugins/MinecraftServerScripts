@@ -1,0 +1,23 @@
+#!/bin/bash
+bc-log "[bc-restart-warning-short] Starting"
+if [[ "`bc-server-running`" ]]; then
+    bc-tell-server 'alert Warning! Restarting in 5 seconds!'
+    sleep 1
+    if [[ "`bc-server-running`" ]]; then
+        bc-tell-server 'alert Warning! Restarting in 4 seconds!'
+        sleep 1
+        if [[ "`bc-server-running`" ]]; then
+            bc-tell-server 'alert Warning! Restarting in 3 seconds!'
+            sleep 1
+            if [[ "`bc-server-running`" ]]; then
+                bc-tell-server 'alert Warning! Restarting in 2 seconds!'
+                sleep 1
+                if [[ "`bc-server-running`" ]]; then
+                    bc-tell-server 'alert Warning! Restarting in 1 second!'
+                    sleep 1
+                fi
+            fi
+        fi
+    fi
+fi
+bc-log "[bc-restart-warning-short] Done"

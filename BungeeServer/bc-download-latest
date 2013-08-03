@@ -1,0 +1,34 @@
+#!/bin/bash
+bc-log "[bc-download-latest] Running"
+#Script disabled due to BungeeCord not having --version flag.
+#currentversion="`bc-current-version`"
+#latestversion="`bc-latest-version`"
+#if [[ "$currentversion" != "$latestversion" ]]; then
+#    bc-log "[bc-download-latest] Server outdated"
+#    bc-log "[bc-download-latest] Downloading..."
+#    wget "http://ci.md-5.net/job/BungeeCord/lastSuccessfulBuild/artifact/proxy/target/BungeeCord.jar" -O "$HOME/jars/bungee.jar.new"
+#    ok="`java -jar $HOME/jars/bungee.jar.new --version`"
+#    times=0
+#    until [[ "$ok" || "$times" -gt "5" ]]; do
+#        rm -f "$HOME/jars/bungee.jar.new"
+#        bc-log "[bc-download-latest] Downloaded jar corrupt"
+#        bc-log "[bc-download-latest] Downloading..."
+#        wget "http://ci.md-5.net/job/BungeeCord/lastSuccessfulBuild/artifact/proxy/target/BungeeCord.jar" -O "$HOME/jars/bungee.jar.new"
+#        ok="`java -jar $HOME/jars/bungee.jar.new --version`"
+#        times="`expr $times + 1`"
+#    done
+#    if [[ "$ok" ]]; then
+#        bc-log "[bc-download-latest] Download successful"
+#        bc-log "[bc-download-latest] Deploying"
+#        if [[ -a "$HOME/jars/bungee.jar" ]]; then
+#            rm -f "$HOME/jars/bungee.jar"
+#        fi
+#        mv "$HOME/jars/bungee.jar.new" "$HOME/jars/bungee.jar"
+#    else
+#        bc-log "[bc-download-latest] Downloaded 5 corrupt jars"
+#        bc-log "[bc-download-latest] Giving up"
+#        rm -f "$HOME/jars/bungee.jar.new"
+#    fi
+#else
+#    bc-log "[bc-download-latest] Server up to date"
+#fi

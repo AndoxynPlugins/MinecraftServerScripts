@@ -1,0 +1,9 @@
+#!/bin/bash
+if [[ "`bc-server-running`" ]]; then
+    bc-log "[bc-start-server] Server already running"
+else
+    bc-log "[bc-start-server] Starting server"
+    bc-pre-start-actions
+    screen -dmS bcserver bc-start
+    bc-enable-script
+fi

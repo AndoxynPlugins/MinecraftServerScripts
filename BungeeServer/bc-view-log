@@ -1,0 +1,7 @@
+#!/bin/bash
+if [[ "$1" ]]; then
+    length="$1"
+else
+    length="100"
+fi
+tail -n "$length" "`bc-get-log`"

@@ -1,0 +1,5 @@
+#!/bin/bash
+bc-log "[bc-pre-start-actions] Starting"
+log="`bc-get-log`"
+bc-download-latest
+bc-log "[bc-pre-start-actions] Done"

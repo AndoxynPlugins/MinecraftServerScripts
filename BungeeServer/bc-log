@@ -1,0 +1,3 @@
+#!/bin/bash
+log="`bc-get-log`"
+echo "$(date +%Y/%m/%d) $(date +%H:%M) $@" >> "$log"
