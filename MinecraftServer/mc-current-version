@@ -1,5 +1,5 @@
 #!/bin/bash
-cd "$HOME/server"
-version="`java -jar spigot.jar --version`"
+jarfile="$HOME/jars/spigot.jar"
+version="`java -jar $jarfile --version`"
 mc-log "[mc-current-version] Current version is $version"
 echo "$version"
