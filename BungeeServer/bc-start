@@ -1,6 +1,10 @@
 #!/bin/bash
 jarfile="$HOME/jars/bungee.jar"
-bc-log "[bc-start] Running jar $jarfile"
+xmx="`cat $HOME/.server-xmx`"
+if [[ ! "$xmx" ]]; then
+    xmx="318m"
+fi
+bc-log "[bc-start] Running jar=$jarfile xmx=$xmx"
 cd "$HOME/server/"
-java -Xmx256m -XX:+CMSClassUnloadingEnabled -jar "$jarfile" --log-strip-color
+java -Xmx"$xmx" -XX:+CMSClassUnloadingEnabled -jar "$jarfile" --log-strip-color
 bc-log "[bc-start] Done"

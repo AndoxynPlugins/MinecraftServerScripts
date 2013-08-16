@@ -7,6 +7,7 @@ if [[ -a "$HOME/server/bukkitupdate/plugins/changelog/" ]]; then
     rm -rf "$HOME/server/bukkitupdate/plugins/changelog/"
 fi
 log="$HOME/logs/`date +%Y-%m-%d`.log"
+if [[ -d "$HOME/server/bukkitupdate/plugins/" ]]; then
 cd "$HOME/server/bukkitupdate/plugins/"
 for worldedit in worldedit*.zip; do continue; done
 if [[ -f "$worldedit" ]]; then
@@ -41,5 +42,6 @@ for pluginmove2 in $HOME/server/plugins-accepted/*.jar; do
         mv "$pluginmove2" "$HOME/server/plugins/"
     fi
 done
+fi
 mc-download-latest
 mc-log "[mc-pre-start-actions] Done"
