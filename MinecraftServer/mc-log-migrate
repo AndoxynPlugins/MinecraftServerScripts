@@ -1,4 +1,5 @@
 #!/bin/bash
+mkdir -p "$HOME/logarchives/"
 currentDate="$(date +%Y-%m-%d)"
 if [[ -a "$HOME/logarchives/$currentDate" ]]; then
     mc-log "[mc-log-migrate] ${currentDate} already exists"
@@ -7,8 +8,9 @@ if [[ -a "$HOME/logarchives/$currentDate" ]]; then
         numb1="$(($numb1 + 1))"
     done
     mc-log "[mc-log-migrate] Migrating log to ${currentDate}-${numb}.log"
-    mv "$HOME/server/server.log" "$HOME/logarchives/${currentDate}-${numb}.log"
+    cp "$HOME/server/server.log" "$HOME/logarchives/${currentDate}-${numb}.log"
 else
     mc-log "[mc-log-migrate] Migrating log to ${currentDate}.log"
-    mv "$HOME/server/server.log" "$HOME/logarchives/${currentDate}.log"
+    cp "$HOME/server/server.log" "$HOME/logarchives/${currentDate}.log"
 fi
+echo > "$HOME/server/server.log"
