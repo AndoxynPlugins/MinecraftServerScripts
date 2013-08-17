@@ -13,9 +13,12 @@ Then I decided that they might be useful, so I put them here.
 
 Instillation
 ============
-* Minecraft server - Spigot - [SPIGOT-INSTALL.md](SPIGOT-INSTALL.md)
-* BungeeCord server - Bungee - [BUNGEE-INSTALL.md](BUNGEE-INSTALL.md)
+* Minecraft server - Spigot - [Spigot Install](SPIGOT-INSTALL.md)
+* Minecraft server - Bukkit - [Bukkit Install](BUKKIT-INSTALL.md)
+* Bungee server - BungeeCord - [Bungee Install](BUNGEE-INSTALL.md)
 
 Usage
 =====
-Writing this now, coming in around 30 minutes or less.
+This will be coming soon.
+
+To start the server use `mc-start-server` for minecraft or `bc-start-server` for bungee.

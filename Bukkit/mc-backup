@@ -1,0 +1,10 @@
+#!/bin/bash
+mc-log "[mc-backup] Starting"
+log="`mc-get-log`"
+backuplocation="file:///mnt/backup/`whoami`"
+duplicity --no-encryption \
+    --log-file="$log" \
+    --name "server-backup" \
+    --full-if-older-than 1W \
+    "$HOME/server" "$backuplocation" >> "$log"
+mc-log "[mc-backup] Done"

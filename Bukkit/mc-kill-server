@@ -1,0 +1,8 @@
+#!/bin/bash
+mc-log "[mc-kill-server] Starting"
+killall -u "`whoami`" -9 java
+screen -wipe
+if [[ -a "$HOME/server/server.log.lck" ]]; then
+    rm -f "$HOME/server/server.log.lck"
+fi
+mc-log "[mc-kill-server] Done"

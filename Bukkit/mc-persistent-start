@@ -1,0 +1,11 @@
+#!/bin/bash
+mc-log "[mc-persistent-start] Starting"
+mc-disable-script
+while [[ "`mc-server-running`" ]]; do
+    mc-log "[mc-persistent-start] Server already running"
+    sleep 1s
+done
+mc-log "[mc-persistent-start] Starting server"
+mc-pre-start-actions
+screen -dmS mcserver mc-start
+mc-enable-script

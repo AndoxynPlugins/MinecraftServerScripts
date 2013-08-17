@@ -1,0 +1,4 @@
+#!/bin/bash
+version="`curl -s http://ci.md-5.net/job/Spigot/lastBuild/buildNumber`"
+mc-log "[mc-latest-version] Latest build: $version"
+echo "git-Spigot-$version"

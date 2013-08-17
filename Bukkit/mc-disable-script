@@ -1,0 +1,7 @@
+#!/bin/bash
+if [[ -a "$HOME/.script-disabled" ]]; then
+    mc-log "[mc-disable-script] Script already disabled"
+else
+    mc-log "[mc-disable-script] Disabling script"
+    touch "$HOME/.script-disabled"
+fi
