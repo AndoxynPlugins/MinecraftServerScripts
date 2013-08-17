@@ -2,7 +2,7 @@ Minecraft Server Scripts
 ========================
 These are for the Minecraft server using CraftBukkit.
 
-Instillation
+Installation
 ============
 
 First you have to download the scripts. You can do this using:
