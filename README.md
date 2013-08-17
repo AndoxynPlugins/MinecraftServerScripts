@@ -11,7 +11,7 @@ They are written in bash, I wrote them for my own minecraft server.
 
 Then I decided that they might be useful, so I put them here.
 
-Instillation
+Installation
 ============
 * Minecraft server - Spigot - [Spigot Install](SPIGOT-INSTALL.md)
 * Minecraft server - Bukkit - [Bukkit Install](BUKKIT-INSTALL.md)
