@@ -1,5 +1,0 @@
-#!/bin/bash
-mc-log "[mc-tell-server] Running: $@"
-screen -X -S mcserver stuff "
-$@
-"

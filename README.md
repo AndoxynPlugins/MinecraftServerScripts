@@ -14,7 +14,6 @@ Then I decided that they might be useful, so I put them here.
 Installation
 ============
 * Minecraft server - Spigot - [Spigot Install](SPIGOT-INSTALL.md)
-* Minecraft server - Bukkit - [Bukkit Install](BUKKIT-INSTALL.md)
 * Bungee server - BungeeCord - [Bungee Install](BUNGEE-INSTALL.md)
 
 Usage

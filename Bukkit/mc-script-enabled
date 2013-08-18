@@ -1,4 +1,0 @@
-#!/bin/bash
-if [[ ! -a ~/.script-disabled ]]; then
-    echo "true"
-fi

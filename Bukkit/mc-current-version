@@ -1,5 +1,0 @@
-#!/bin/bash
-jarfile="$HOME/jars/craftbukkit.jar"
-version="`java -jar $jarfile --version`"
-mc-log "[mc-current-version] Current version is $version"
-echo "$version"

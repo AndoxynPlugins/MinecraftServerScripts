@@ -1,7 +1,0 @@
-#!/bin/bash
-if [[ -a "$HOME/.script-disabled" ]]; then
-    mc-log "[mc-enable-script] Enabling script"
-    rm -f "$HOME/.script-disabled"
-else
-    mc-log "[mc-enable-script] Script already enabled"
-fi

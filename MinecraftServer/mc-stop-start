@@ -1,8 +1,7 @@
 #!/bin/bash
 mc-log "[mc-stop-start] Starting"
-mc-stop-script
+mc-disable-script
 mc-restart-warning-short
 mc-stop-server
 mc-start-server
 mc-log "[mc-stop-start] Done"
-s

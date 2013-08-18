@@ -8,3 +8,5 @@ fi
 log="$HOME/logs/`date +%Y-%m-%d`.log"
 touch "$log"
 echo "$log"
+# To disable logging, comment out the above and uncomment the below
+#echo "/dev/null"

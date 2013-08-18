@@ -4,7 +4,8 @@ log="`bc-get-log`"
 backuplocation="file:///mnt/backup/`whoami`"
 duplicity --no-encryption \
     --log-file="$log" \
-    --name "server-backup" \
+    --name "`whoami`" \
+    --achive-dir "/mnt/backup/archives"
     --full-if-older-than 1W \
-    "$HOME/server" "$backuplocation" >> "$log"
+    "$HOME" "$backuplocation" >> "$log"
 bc-log "[bc-backup] Done"

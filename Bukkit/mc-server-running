@@ -1,4 +1,0 @@
-#!/bin/bash
-if [[ "`pgrep -xu $(id -u) java`" ]]; then
-    echo "true"
-fi

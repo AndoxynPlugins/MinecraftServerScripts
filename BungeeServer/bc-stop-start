@@ -1,8 +1,7 @@
 #!/bin/bash
 bc-log "[bc-stop-start] Starting"
-bc-stop-script
+bc-disable-script
 bc-restart-warning-short
 bc-stop-server
 bc-start-server
 bc-log "[bc-stop-start] Done"
-s
