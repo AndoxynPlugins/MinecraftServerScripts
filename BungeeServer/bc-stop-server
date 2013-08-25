@@ -1,8 +1,8 @@
 #!/bin/bash
 if [[ "`bc-server-running`" ]]; then
     bc-log "[bc-stop-server] Stopping server"
-    bc-tell-server "kickall Server is restarting"
-    bc-tell-server "stop"
+    bc-tell-server "alert Proxy is restarting"
+    bc-tell-server "end"
     timeout="`expr 120 + $(date '+%s')`"
     while [[ "`bc-server-running`" ]]; do
         if [[ "`date '+%s'`" -gt "$timeout" ]]; then

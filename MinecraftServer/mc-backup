@@ -5,7 +5,7 @@ backuplocation="file:///mnt/backup/`whoami`"
 duplicity --no-encryption \
     --log-file="$log" \
     --name "`whoami`" \
-    --achive-dir "/mnt/backup/archives"
+    --archive-dir "/mnt/backup/archives" \
     --full-if-older-than 1W \
-    "$HOME/server" "$backuplocation" >> "$log"
+    "$HOME" "$backuplocation" >> "$log"
 mc-log "[mc-backup] Done"
