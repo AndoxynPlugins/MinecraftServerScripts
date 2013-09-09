@@ -1,9 +1,0 @@
-#!/bin/bash
-bc-log "[bc-midnight-script] Starting"
-bc-disable-script
-bc-restart-warning-long
-bc-stop-server
-bc-log-migrate
-bc-backup
-bc-start-server
-bc-log "[bc-midnight-script] Done"

@@ -1,16 +1,16 @@
 #!/bin/bash
 mkdir -p "$HOME/logarchives/"
 currentDate="$(date +%Y-%m-%d)"
-if [[ -a "$HOME/logarchives/$currentDate" ]]; then
+if [[ -a "$HOME/logarchives/${currentDate}.log.gz" ]]; then
     bc-log "[bc-log-migrate] ${currentDate} already exists"
     numb='1'
-    while [[ -a "$HOME/logarchives/${currentdate}-${numb}.log" ]]; do
+    while [[ -a "$HOME/logarchives/${currentdate}-${numb}.log.gz" ]]; do
         numb1="$(($numb1 + 1))"
     done
-    bc-log "[bc-log-migrate] Migrating log to ${currentDate}-${numb}.log"
-    cp "$HOME/server/proxy.log.0" "$HOME/logarchives/${currentDate}-${numb}.log"
+    bc-log "[bc-log-migrate] Migrating log to ${currentDate}-${numb}.log.gz"
+    gzip -c "$HOME/server/proxy.log.0" > "$HOME/logarchives/${currentDate}-${numb}.log.gz"
 else
     bc-log "[bc-log-migrate] Migrating log to ${currentDate}.log"
-    cp "$HOME/server/proxy.log.0" "$HOME/logarchives/${currentDate}.log"
+    gzip -c "$HOME/server/proxy.log.0" > "$HOME/logarchives/${currentDate}.log.gz"
 fi
-echo > "$HOME/server/proxy.log.0"
+:> "$HOME/server/proxy.log.0"

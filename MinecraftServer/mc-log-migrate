@@ -1,16 +1,16 @@
 #!/bin/bash
 mkdir -p "$HOME/logarchives/"
 currentDate="$(date +%Y-%m-%d)"
-if [[ -a "$HOME/logarchives/$currentDate" ]]; then
+if [[ -a "$HOME/logarchives/${currentDate}.log.gz" ]]; then
     mc-log "[mc-log-migrate] ${currentDate} already exists"
     numb='1'
-    while [[ -a "$HOME/logarchives/${currentdate}-${numb}.log" ]]; do
+    while [[ -a "$HOME/logarchives/${currentdate}-${numb}.log.gz" ]]; do
         numb1="$(($numb1 + 1))"
     done
-    mc-log "[mc-log-migrate] Migrating log to ${currentDate}-${numb}.log"
-    cp "$HOME/server/server.log" "$HOME/logarchives/${currentDate}-${numb}.log"
+    mc-log "[mc-log-migrate] Migrating log to ${currentDate}-${numb}.log.gz"
+    gzip -c "$HOME/server/server.log" > "$HOME/logarchives/${currentDate}-${numb}.log.gz"
 else
-    mc-log "[mc-log-migrate] Migrating log to ${currentDate}.log"
-    cp "$HOME/server/server.log" "$HOME/logarchives/${currentDate}.log"
+    mc-log "[mc-log-migrate] Migrating log to ${currentDate}.log.gz"
+    gzip -c "$HOME/server/server.log" > "$HOME/logarchives/${currentDate}.log.gz"
 fi
-echo > "$HOME/server/server.log"
+:> "$HOME/server/server.log"

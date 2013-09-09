@@ -1,0 +1,8 @@
+#!/bin/bash
+bc-log "[bc-backup-script] Starting"
+bc-disable-script
+bc-restart-warning-short
+bc-stop-server
+bc-backup
+bc-start-server
+bc-log "[bc-backup-script] Done"

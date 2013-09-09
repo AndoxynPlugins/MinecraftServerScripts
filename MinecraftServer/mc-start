@@ -11,5 +11,5 @@ fi
 mc-log "[mc-start] Running; jar=$jarfile; xmx=$xmx; xms=$xms"
 
 cd "$HOME/server/"
-java -Xms"$xms" -Xmx"$xmx" -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=128m -jar "$jarfile" --log-strip-color
+java -Xms"$xms" -Xmx"$xmx" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$jarfile" --log-strip-color
 mc-log "[mc-start] Done"

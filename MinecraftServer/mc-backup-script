@@ -1,9 +1,8 @@
 #!/bin/bash
-mc-log "[mc-midnight-script] Starting"
+mc-log "[mc-backup-script] Starting"
 mc-disable-script
 mc-restart-warning-long
 mc-stop-server
-mc-log-migrate
 mc-backup
 mc-start-server
-mc-log "[mc-midnight-script] Done"
+mc-log "[mc-backup-script] Done"
