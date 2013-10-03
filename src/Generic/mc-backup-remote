@@ -1,0 +1,15 @@
+#!/bin/bash
+mc-log "[mc-backup-remote] Starting"
+log="`mc-get-log`"
+backuplocation="`cat $HOME/backup-location`"
+name="`cat $HOME`"
+if [[ ! "$backuplocation" ]]; then
+    mc-log "[mc-backup-remote] Backup location $HOME/backup-location not found!"
+    exit
+fi
+duplicity \
+    --log-file="$log" \
+    --name "" \
+    --full-if-older-than 2D \
+    "$HOME" "$backuplocation" >> "$log"
+mc-log "[mc-backup] Done"
