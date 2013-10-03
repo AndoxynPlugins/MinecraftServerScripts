@@ -1,0 +1,5 @@
+language: bash
+before_install: echo -n
+install: echo -n
+before_script: chmod 755 test.sh
+script: ./test.sh
