@@ -1,5 +1,5 @@
-language: bash
-before_install: echo -n
-install: echo -n
+language: sh
+before_install:
+install: wget https://raw.github.com/daboross/bash-test-script/master/test.sh -O test.sh
 before_script: chmod 755 test.sh
 script: ./test.sh
