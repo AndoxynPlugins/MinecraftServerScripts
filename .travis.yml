@@ -1,5 +1,7 @@
 language: sh
 before_install:
-install: wget https://raw.github.com/daboross/bash-test-script/master/test.sh -O test.sh
-before_script: chmod 755 test.sh
+install:
+- wget https://raw.github.com/daboross/bash-test-script/master/test.sh -O test.sh
+- chmod 755 test.sh
+before_script:
 script: ./test.sh
