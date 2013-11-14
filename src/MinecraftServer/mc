@@ -1,0 +1,183 @@
+#!/bin/bash
+
+### Configuration ###
+SCRIPT_NAME="mcserver"
+
+# Set THIS to be this script.
+THIS="$([[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}")"
+
+# Resumes the server session
+resume() {
+    tmux attach "$SCRIPT_NAME"
+}
+
+# Gets the current log file
+get_log() {
+    LOG_DIR="$HOME/logs"
+    if [[ ! -d "$LOG_DIR" ]]; then
+       if [[ -a "$LOG_DIR" ]]; then
+           mv "$LOG_DIR" "$HOME/logs_bak"
+        fi
+        mkdir -p "$LOG_DIR"
+    fi
+    LOG_FILE="$LOG_DIR`date +%Y-%m-%d`.log"
+    touch "$LOG_FILE"
+    echo "$LOG_FILE"
+}
+
+# Logs something to the log file
+# $@ - Lines to log
+log() {
+    LOG="`mc-get-log`"
+    echo "`date +"%Y/%m/%d %H:%M"` $@" >> "$LOG"
+}
+
+# Migrates the server.log file to 
+log_migrate() {
+    SERVER_LOG="$HOME/server/server.log"
+    ARCHIVE_DIR="$HOME/logarchives/"
+    mkdir -p "$ARCHIVE_DIR"
+    CURRENT_DATE="$(date +%Y-%m-%d)"
+    ARCHIVE_FILE="$ARCHIVE_DIR/${CURRENT_DATE}.log.gz"
+    if [[ -a "$ARCHIVE_FILE" ]]; then
+        mc-log "[mc-log-migrate] ${ARCHIVE_FILE} already exists"
+        FILE_NUM='1'
+        ARCHIVE_FILE="$ARCHIVE_DIR/${CURRENT_DATE}-${FILE_NUM}.log.gz"
+        while [[ -a "ARCHIVE_FILE" ]]; do
+            FILE_NUM="$((FILE_NUM + 1))"
+            ARCHIVE_FILE="$ARCHIVE_DIR/${CURRENT_DATE}-${FILE_NUM}.log.gz"
+        done
+    fi
+    log "[mc-log-migrate] Migrating log to $ARCHIVE_FILE"
+    gzip -c "$SERVER_LOG" > "$ARCHIVE_FILE"
+    > "$SERVER_LOG"
+}
+
+backup() {
+    log "[mc-backup] Starting"
+    LOG_FILE="`mc-get-log`"
+    BACKUP_LOCATION="file:///mnt/backup/`whoami`"
+    duplicity --no-encryption \
+        --log-file="$LOG_FILE" \
+        --name "`whoami`" \
+        --archive-dir "/mnt/backup/archives" \
+        --full-if-older-than 1W \
+        "$HOME" "$BACKUP_LOCATION" &>> "$LOG_FILE"
+    log "[mc-backup] Done"
+}
+
+backup_script() {
+    log "[mc-backup-script] Starting"
+    disable_script
+    restart_warning_long
+    stop_server
+    backup
+    start_server
+    log "[mc-backup-script] Done"
+}
+
+boot() {
+    log "[mc-boot] Running"
+    start_server
+}
+
+get_current_version() {
+    JAR_FILE="$HOME/jars/spigot.jar"
+    MC_VERSION="$(java -jar $JAR_FILE --version)"
+    log "[mc-get-version] Current version is $MC_VERSION"
+    echo "$VERSION"
+}
+
+get_latest_version() {
+    LATEST_VERSION="`curl -s http://ci.md-5.net/job/Spigot/lastBuild/buildNumber`"
+    log "[mc-latest-version] Latest build: $LATEST_VERSION"
+    echo "git-Spigot-$LATEST_VERSION"
+}
+
+disable_script() {
+    if [[ -a "$HOME/.script-disabled" ]]; then
+        log "[mc-disable-script] Script already disabled"
+    else
+        log "[mc-disable-script] Disabling script"
+        touch "$HOME/.script-disabled"
+    fi
+}
+
+enable_script() {
+    if [[ -a "$HOME/.script-disabled" ]]; then
+        log "[mc-enable-script] Enabling script"
+        rm -f "$HOME/.script-disabled"
+    else
+        log "[mc-enable-script] Script already enabled"
+    fi
+}
+
+download_latest() {
+    CURRENT_VERSION="`get_current_version`"
+    LATEST_VERSION="`get_latest_version`"
+    NEW_JAR="$HOME/jars/spigot.jar.new"
+    FINAL_JAR="$HOME/jars/spigot.jar.new"
+    UPDATE_URL="http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar"
+    if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
+        log "[mc-download-latest] Server outdated"
+        log "[mc-download-latest] Downloading..."
+        wget "$UPDATE_URL" -O "$NEW_JAR"
+        IS_VALID_JAR="`java -jar "$NEW_JAR" --version`"
+        ATTEMPTS=0
+        until [[ "$IS_VALID_JAR" || "$ATTEMPTS" -gt "5" ]]; do
+            rm -f "$NEW_JAR"
+            log "[mc-download-latest] Downloaded jar corrupt"
+            log "[mc-download-latest] Downloading..."
+            wget "$UPDATE_URL" -O "$NEW_JAR"
+            IS_VALID_JAR="`java -jar $HOME/jars/spigot.jar.new --version`"
+            ATTEMPTS="$((ATTEMPTS + 1))"
+        done
+        if [[ "$IS_VALID_JAR" ]]; then
+            log "[mc-download-latest] Download successful"
+            log "[mc-download-latest] Deploying"
+            if [[ -a "$FINAL_JAR" ]]; then
+                rm -f "$FINAL_JAR"
+            fi
+            mv "$NEW_JAR" "$FINAL_JAR"
+        else
+            log "[mc-download-latest] Downloaded 5 corrupt jars"
+            log "[mc-download-latest] Giving up"
+            rm -f "$NEW_JAR"
+        fi
+    else
+        log "[mc-download-latest] Server up to date"
+    fi
+}
+
+kill_server() {
+    log "[mc-kill-server] Starting"
+    killall -u "`whoami`" -9 java
+    if [[ -a "$HOME/server/server.log.lck" ]]; then
+        rm -f "$HOME/server/server.log.lck"
+    fi
+    log "[mc-kill-server] Done"
+}
+
+persistent_start() {
+    log "[mc-persistent-start] Starting"
+    disable_script
+    while [[ "`server_running`" ]]; do
+        mc "[mc-persistent-start] Server already running"
+        sleep 1s
+    done
+    log "[mc-persistent-start] Starting server"
+    pre_start_actions
+    screen -dmS mcserver mc mc_start
+    mc-enable-script
+}
+
+kill_start() {
+    log "[mc-kill-start] Starting"
+    kill_server
+    while [[ "`server_running`" ]]; do
+        sleep 1
+    done
+    start_server
+    log "[mc-kill-start] Done"
+s
+}
