@@ -1,0 +1,7 @@
+#!/bin/bash
+# Meant for interactive use
+file="$HOME/mysqlbackups/`date +%Y-%m-%d`.sql.gz"
+if [[ -a "$file" ]]; then
+    echo "Already backed up!"
+fi
+mysqldump -u root -p --all-databases | gzip -c7 > "$file"

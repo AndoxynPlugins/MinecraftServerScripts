@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ### Configuration ###
-SCRIPT_NAME="mcserver"
+declare -r SCRIPT_NAME="mcserver"
 
 # Set THIS to be this script.
-THIS="$([[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}")"
+declare -r THIS="`[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`"
 
 # Resumes the server session
 resume() {
@@ -13,14 +13,14 @@ resume() {
 
 # Gets the current log file
 get_log() {
-    LOG_DIR="$HOME/logs"
+    local LOG_DIR="$HOME/logs"
     if [[ ! -d "$LOG_DIR" ]]; then
        if [[ -a "$LOG_DIR" ]]; then
            mv "$LOG_DIR" "$HOME/logs_bak"
         fi
         mkdir -p "$LOG_DIR"
     fi
-    LOG_FILE="$LOG_DIR`date +%Y-%m-%d`.log"
+    local LOG_FILE="$LOG_DIR`date +%Y-%m-%d`.log"
     touch "$LOG_FILE"
     echo "$LOG_FILE"
 }
@@ -149,6 +149,12 @@ download_latest() {
     fi
 }
 
+pre_start_actions() {
+    mc-log "[mc-pre-start-actions] Starting"
+    mc-download-latest
+    mc-log "[mc-pre-start-actions] Done"
+}
+
 kill_server() {
     log "[mc-kill-server] Starting"
     killall -u "`whoami`" -9 java
@@ -179,5 +185,5 @@ kill_start() {
     done
     start_server
     log "[mc-kill-start] Done"
-s
+    resume
 }
