@@ -32,6 +32,26 @@ log() {
     echo "`date +"%Y/%m/%d %H:%M"` $@" >> "$LOG"
 }
 
+server_running() {
+    if [[ "`pgrep -xu $(id -u) java`" ]]; then
+        echo "true"
+    fi
+}
+
+server_script() {
+    if [[ `script-enabled` ]]; then
+        if [[ "`server-running`" ]]; then
+            log "[mc-server-script] Server running"
+        else
+            log "[mc-server-script] Restarting server"
+            kill-server
+            start-server
+        fi
+    else
+        mc-log "[mc-server-script] Script disabled"
+    fi
+}
+
 # Migrates the server.log file to 
 log_migrate() {
     SERVER_LOG="$HOME/server/server.log"
@@ -51,6 +71,38 @@ log_migrate() {
     log "[mc-log-migrate] Migrating log to $ARCHIVE_FILE"
     gzip -c "$SERVER_LOG" > "$ARCHIVE_FILE"
     > "$SERVER_LOG"
+}
+
+tell_server() {
+    mc-log "[mc-tell-server] Running: $@"
+    tmux send-keys -t "" "
+$@
+"
+}
+
+restart_warning_short() {
+    log "[mc-restart-warning-short] Starting"
+    if [[ "`mc-server-running`" ]]; then
+        tell_server 'say Warning! Restarting in 5 seconds!'
+        sleep 1
+        if [[ "`mc-server-running`" ]]; then
+            tell_server 'say Warning! Restarting in 4 seconds!'
+            sleep 1
+            if [[ "`mc-server-running`" ]]; then
+                tell_server 'say Warning! Restarting in 3 seconds!'
+                sleep 1
+                if [[ "`mc-server-running`" ]]; then
+                    tell_server 'say Warning! Restarting in 2 seconds!'
+                    sleep 1
+                    if [[ "`mc-server-running`" ]]; then
+                        mc-tell-server 'say Warning! Restarting in 1 second!'
+                        sleep 1
+                    fi
+                fi
+            fi
+        fi
+    fi
+    mc-log "[mc-restart-warning-short] Done"
 }
 
 backup() {
@@ -92,6 +144,12 @@ get_latest_version() {
     LATEST_VERSION="`curl -s http://ci.md-5.net/job/Spigot/lastBuild/buildNumber`"
     log "[mc-latest-version] Latest build: $LATEST_VERSION"
     echo "git-Spigot-$LATEST_VERSION"
+}
+
+script_enabled() {
+    if [[ ! -a ~/.script-disabled ]]; then
+        echo "true"
+    fi
 }
 
 disable_script() {
@@ -174,7 +232,7 @@ persistent_start() {
     log "[mc-persistent-start] Starting server"
     pre_start_actions
     screen -dmS mcserver mc mc_start
-    mc-enable-script
+    enable_script
 }
 
 kill_start() {
@@ -186,4 +244,58 @@ kill_start() {
     start_server
     log "[mc-kill-start] Done"
     resume
+}
+
+spigot_restart() {
+    screen -dmS restart mc-persistent-start
+}
+
+mc_start() {
+    jarfile="$HOME/jars/spigot.jar"
+    xmx="`cat $HOME/.server-xmx`"
+    xms="`cat $HOME/.server-xms`"
+    if [[ ! "$xmx" ]]; then
+        xmx="1g"
+    fi
+    if [[ ! "$xms" ]]; then
+        xms="$xmx"
+    fi
+    mc-log "[mc-start] Running; jar=$jarfile; xmx=$xmx; xms=$xms"
+
+    cd "$HOME/server/"
+    java -Xms"$xms" -Xmx"$xmx" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$jarfile" --log-strip-color
+    mc-log "[mc-start] Done"
+}
+mc_stop_server() {
+    if [[ "`mc-server-running`" ]]; then
+        mc-log "[mc-stop-server] Stopping server"
+        mc-tell-server "kickall Server is restarting"
+        mc-tell-server "stop"
+        timeout="`expr 120 + $(date '+%s')`"
+        while [[ "`mc-server-running`" ]]; do
+            if [[ "`date '+%s'`" -gt "$timeout" ]]; then
+                mc-kill-server
+            fi
+            sleep 1s
+        done
+    else
+        mc-log "[mc-stop-server] Server not running"
+    fi
+}
+stop_start() {
+    mc-log "[mc-stop-start] Starting"
+    mc-disable-script
+    mc-restart-warning-short
+    mc-stop-server
+    mc-start-server
+    mc-log "[mc-stop-start] Done"
+}
+
+view_log() {
+    if [[ "$1" ]]; then
+        length="$1"
+    else
+        length="100"
+    fi
+    tail -n "$length" "`mc-get-log`"
 }
