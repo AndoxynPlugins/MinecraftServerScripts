@@ -1,0 +1,326 @@
+#!/bin/bash
+#  mc - Minecraft Server Script
+#
+# ### License ###
+#
+# Copyright 2013 Dabo Ross
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ### TODO ###
+# * Grab PID and fix server_running
+# * Make a unified storage file to store PID and fix server_running.
+
+### Configuration ###
+
+# Name of the script - to have unique scripts
+declare -r NAME="mcserver"
+
+# Server directory - where the minecraft server is stored
+declare -r SERVER_DIR="$HOME/server"
+
+# XMX and XMS
+declare -r XMX="1G"
+declare -r XMS="$XMX"
+
+# Set THIS to be this script.
+declare -r SCRIPT="$([[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}")"
+
+### Script Functions ###
+
+# Resumes the server session
+resume() {
+    tmux attach "$NAME"
+}
+
+# Gets the current log file
+# stdout - log file
+get_log() {
+    local -r LOG_DIR="${HOME}/${NAME}-logs"
+    if [[ ! -d "$LOG_DIR" ]]; then
+       if [[ -a "$LOG_DIR" ]]; then
+           mv "$LOG_DIR" "${LOG_DIR}-bak"
+        fi
+        mkdir -p "$LOG_DIR"
+    fi
+    local -r LOG_FILE="${LOG_DIR}/$(date +%Y-%m-%d).log"
+    touch "$LOG_FILE"
+    echo "$LOG_FILE"
+}
+
+# Logs something to the log file
+# $@ - Lines to log
+log() {
+    echo "$(date +'%Y/%m/%d %H:%M') [${1}] ${@:2}" >> "$(get_log)"
+}
+
+# Tests if the server is running
+# stdout - true if running
+server_running() {
+    if [[ "$(pgrep -xu $(id -u) java)" ]]; then
+        echo "true"
+    fi
+}
+
+# Runs the server script
+server_script() {
+    if [[ "$(script_enabled)" ]]; then
+        if [[ "$(server_running)" ]]; then
+            log "[server_script] Server running"
+        else
+            log "[server_script] Restarting server"
+            kill_server
+            start_server
+        fi
+    else
+        log "[server_script] Script disabled"
+    fi
+}
+
+# Migrates the server.log file to
+log_migrate() {
+    local -r SERVER_LOG="${SERVER_DIR}/server.log"
+    local -r ARCHIVE_DIR="${HOME}/logarchives/${NAME}"
+    mkdir -p "$ARCHIVE_DIR"
+    local -r CURRENT_DATE="$(date +%Y-%m-%d)"
+    local ARCHIVE_FILE="$ARCHIVE_DIR/${CURRENT_DATE}.log.gz"
+    if [[ -a "$ARCHIVE_FILE" ]]; then
+        log "[log_migrate] ${ARCHIVE_FILE} already exists"
+        local FILE_NUM='1'
+        ARCHIVE_FILE="${ARCHIVE_DIR}/${CURRENT_DATE}-${FILE_NUM}.log.gz"
+        while [[ -a "$ARCHIVE_FILE" ]]; do
+            FILE_NUM="$((FILE_NUM + 1))"
+            ARCHIVE_FILE="$ARCHIVE_DIR/${CURRENT_DATE}-${FILE_NUM}.log.gz"
+        done
+    fi
+    log "[log-migrate] Migrating log to $ARCHIVE_FILE"
+    gzip -c "$SERVER_LOG" > "$ARCHIVE_FILE"
+    > "$SERVER_LOG"
+}
+
+tell_server() {
+    log "[tell_server] Running $@"
+    tmux send-keys -t "$NAME" "
+$@
+"
+}
+
+restart_warning_short() {
+    log "[mc-restart-warning-short] Starting"
+    if [[ "`mc-server-running`" ]]; then
+        tell_server 'say Warning! Restarting in 5 seconds!'
+        sleep 1
+        if [[ "`mc-server-running`" ]]; then
+            tell_server 'say Warning! Restarting in 4 seconds!'
+            sleep 1
+            if [[ "`mc-server-running`" ]]; then
+                tell_server 'say Warning! Restarting in 3 seconds!'
+                sleep 1
+                if [[ "`mc-server-running`" ]]; then
+                    tell_server 'say Warning! Restarting in 2 seconds!'
+                    sleep 1
+                    if [[ "`mc-server-running`" ]]; then
+                        mc-tell-server 'say Warning! Restarting in 1 second!'
+                        sleep 1
+                    fi
+                fi
+            fi
+        fi
+    fi
+    log "[restart-warning-short] Done"
+}
+
+backup() {
+    log "[mc-backup] Starting"
+    LOG_FILE="`mc-get-log`"
+    BACKUP_LOCATION="file:///mnt/backup/`whoami`"
+    duplicity --no-encryption \
+        --log-file="$LOG_FILE" \
+        --name "`whoami`" \
+        --archive-dir "/mnt/backup/archives" \
+        --full-if-older-than 1W \
+        "$HOME" "$BACKUP_LOCATION" &>> "$LOG_FILE"
+    log "[mc-backup] Done"
+}
+
+backup_script() {
+    log "[mc-backup-script] Starting"
+    disable_script
+    restart_warning_long
+    stop_server
+    backup
+    start_server
+    log "[mc-backup-script] Done"
+}
+
+boot() {
+    log "[mc-boot] Running"
+    start_server
+}
+
+get_current_version() {
+    JAR_FILE="$HOME/jars/spigot.jar"
+    MC_VERSION="$(java -jar $JAR_FILE --version)"
+    log "[mc-get-version] Current version is $MC_VERSION"
+    echo "$VERSION"
+}
+
+get_latest_version() {
+    LATEST_VERSION="`curl -s http://ci.md-5.net/job/Spigot/lastBuild/buildNumber`"
+    log "[mc-latest-version] Latest build: $LATEST_VERSION"
+    echo "git-Spigot-$LATEST_VERSION"
+}
+
+script_enabled() {
+    if [[ ! -a ~/.script-disabled ]]; then
+        echo "true"
+    fi
+}
+
+disable_script() {
+    if [[ -a "$HOME/.script-disabled" ]]; then
+        log "[mc-disable-script] Script already disabled"
+    else
+        log "[mc-disable-script] Disabling script"
+        touch "$HOME/.script-disabled"
+    fi
+}
+
+enable_script() {
+    if [[ -a "$HOME/.script-disabled" ]]; then
+        log "[mc-enable-script] Enabling script"
+        rm -f "$HOME/.script-disabled"
+    else
+        log "[mc-enable-script] Script already enabled"
+    fi
+}
+
+download_latest() {
+    CURRENT_VERSION="`get_current_version`"
+    LATEST_VERSION="`get_latest_version`"
+    NEW_JAR="$HOME/jars/spigot.jar.new"
+    FINAL_JAR="$HOME/jars/spigot.jar.new"
+    UPDATE_URL="http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar"
+    if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
+        log "[mc-download-latest] Server outdated"
+        log "[mc-download-latest] Downloading..."
+        wget "$UPDATE_URL" -O "$NEW_JAR"
+        IS_VALID_JAR="`java -jar "$NEW_JAR" --version`"
+        ATTEMPTS=0
+        until [[ "$IS_VALID_JAR" || "$ATTEMPTS" -gt "5" ]]; do
+            rm -f "$NEW_JAR"
+            log "[mc-download-latest] Downloaded jar corrupt"
+            log "[mc-download-latest] Downloading..."
+            wget "$UPDATE_URL" -O "$NEW_JAR"
+            IS_VALID_JAR="`java -jar $HOME/jars/spigot.jar.new --version`"
+            ATTEMPTS="$((ATTEMPTS + 1))"
+        done
+        if [[ "$IS_VALID_JAR" ]]; then
+            log "[mc-download-latest] Download successful"
+            log "[mc-download-latest] Deploying"
+            if [[ -a "$FINAL_JAR" ]]; then
+                rm -f "$FINAL_JAR"
+            fi
+            mv "$NEW_JAR" "$FINAL_JAR"
+        else
+            log "[mc-download-latest] Downloaded 5 corrupt jars"
+            log "[mc-download-latest] Giving up"
+            rm -f "$NEW_JAR"
+        fi
+    else
+        log "[mc-download-latest] Server up to date"
+    fi
+}
+
+pre_start_actions() {
+    mc-log "[mc-pre-start-actions] Starting"
+    mc-download-latest
+    mc-log "[mc-pre-start-actions] Done"
+}
+
+kill_server() {
+    log "[mc-kill-server] Starting"
+    killall -u "`whoami`" -9 java
+    if [[ -a "$HOME/server/server.log.lck" ]]; then
+        rm -f "$HOME/server/server.log.lck"
+    fi
+    log "[mc-kill-server] Done"
+}
+
+persistent_start() {
+    log "[mc-persistent-start] Starting"
+    disable_script
+    while [[ "`server_running`" ]]; do
+        mc "[mc-persistent-start] Server already running"
+        sleep 1s
+    done
+    log "[mc-persistent-start] Starting server"
+    pre_start_actions
+    screen -dmS mcserver mc mc_start
+    enable_script
+}
+
+kill_start() {
+    log "[mc-kill-start] Starting"
+    kill_server
+    while [[ "`server_running`" ]]; do
+        sleep 1
+    done
+    start_server
+    log "[mc-kill-start] Done"
+    resume
+}
+
+spigot_restart() {
+    screen -dmS restart mc-persistent-start
+}
+
+internal_start() {
+    local -r JAR_FILE="$SERVER_DIR/jars/spigot.jar"
+    mc-log "[internal_start] Starting with xms $XMS, xmx $XMX, and jar $JAR_FILE"
+
+    cd "$HOME/server/"
+    java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$jarfile" --log-strip-color
+    mc-log "[internal_start] Done"
+}
+mc_stop_server() {
+    if [[ "$(server_running)" ]]; then
+        log "[stop_server] Stopping server"
+        tell_server "kickall Server is restarting"
+        tell_server "stop"
+        timeout="$((120 + $(date '+%s')))"
+        while [[ "$(server_running)" ]]; do
+            if [[ "$(date '+%s')" -gt "$timeout" ]]; then
+                mc-kill-server
+            fi
+            sleep 1s
+        done
+    else
+        mc-log "[mc-stop-server] Server not running"
+    fi
+}
+stop_start() {
+    log "[stop_start] Starting"
+    disable_script
+    restart_warning_short
+    stop_server
+    start_server
+    log "[stop_start] Done"
+}
+
+view_log() {
+    length="$1"
+    if [[ -z "$length" ]]; then
+        length="100"
+    fi
+    tail -n "$length" "$(mc-get-log)"
+}
