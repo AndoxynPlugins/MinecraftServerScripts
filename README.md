@@ -16,8 +16,7 @@ Installation
 * Minecraft server - Spigot - [Spigot Install](SPIGOT-INSTALL.md)
 * Bungee server - BungeeCord - [Bungee Install](BUNGEE-INSTALL.md)
 
-Usage
-=====
-This will be coming soon.
-
 To start the server use `mc-start-server` for minecraft or `bc-start-server` for bungee.
+
+
+This project is no longer being worked on. See [MCScript](https://github.com/daboross/MCScript) for the new single-file version.
