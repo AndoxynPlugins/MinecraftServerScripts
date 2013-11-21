@@ -123,9 +123,13 @@ log_migrate() {
 # Sends keystrokes to the server session
 tell_server() {
     log "tell_server" "Running $@"
-    tmux send-keys -t "${NAME}-server" "
-$@
-"
+    local -i NUM=0
+    while [[ NUM < 50 ]]; do
+        NUM="$((NUM + 1))"
+        tmux send-keys -t "${NAME}-server" "BSpace"
+    done
+    tmux send-keys -t "${NAME}-server" "$*"
+    tmux send-keys -t "${NAME}-server" "Enter"
 }
 
 # Sends a short 5 second restart warning to the server
