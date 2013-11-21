@@ -23,14 +23,22 @@
 ### Configuration ###
 
 # Name of the script - to have unique scripts
-declare -r NAME="mcserver"
+declare -r NAME="mainserver"
 
 # Server directory - where the minecraft server is stored
-declare -r SERVER_DIR="$HOME/server"
+declare -r SERVER_DIR="${HOME}/${NAME}/server"
 
 # XMX and XMS
 declare -r XMX="1G"
 declare -r XMS="$XMX"
+
+# Backup location to backup to
+declare -r BACKUP_LOCATION="file:///mnt/backup/$(whoami)-${NAME}"
+
+# Folder to backup
+declare -r STUFF_TO_BACKUP="${HOME}/${NAME}"
+
+### Script Variables ###
 
 # Set THIS to be this script.
 declare -r SCRIPT="$([[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}")"
@@ -45,16 +53,20 @@ resume() {
 # Gets the current log file
 # stdout - log file
 get_log() {
-    local -r LOG_DIR="${HOME}/${NAME}-logs"
-    if [[ ! -d "$LOG_DIR" ]]; then
-       if [[ -a "$LOG_DIR" ]]; then
-           mv "$LOG_DIR" "${LOG_DIR}-bak"
-        fi
-        mkdir -p "$LOG_DIR"
-    fi
+    local -r LOG_DIR="${HOME}/${NAME}/logs"
+    mkdir -p "$LOG_DIR"
     local -r LOG_FILE="${LOG_DIR}/$(date +%Y-%m-%d).log"
     touch "$LOG_FILE"
     echo "$LOG_FILE"
+}
+
+# Adds the log prefix to the input, and redirects to log file.
+# $1 - name of the log.
+# stdin - stuff to log
+log_stdin() {
+    local -r LOG_NAME="$1"
+    local -r PREFIX="$(echo $(date +'%Y/%m/%d %H:%M') [${LOG_NAME}] | sed -e 's/[\/&]/\\&/g') -"
+    sed -e 's/^/${PREFIX}/g' - >> "$(get_log)"
 }
 
 # Logs something to the log file
@@ -66,15 +78,16 @@ log() {
 # Tests if the server is running
 # stdout - true if running
 server_running() {
-    if [[ "$(pgrep -xu $(id -u) java)" ]]; then
-        echo "true"
-    fi
+    [[ "$(pgrep -xu $(id -u) java)" ]] && return 0 || return 1
+    # new
+    #local -r SERVER_PID="$(cat ${HOME}/${NAME}/.server-pid)"
+    #kill -s 0 "$SERVER_PID" &> /dev/null && return 0 || return 1
 }
 
 # Runs the server script
 server_script() {
-    if [[ "$(script_enabled)" ]]; then
-        if [[ "$(server_running)" ]]; then
+    if script_enabled; then
+        if server_running; then
             log "server_script" "Server running"
         else
             log "server_script" "Restarting server"
@@ -89,7 +102,7 @@ server_script() {
 # Migrates the server.log file to
 log_migrate() {
     local -r SERVER_LOG="${SERVER_DIR}/server.log"
-    local -r ARCHIVE_DIR="${HOME}/logarchives/${NAME}"
+    local -r ARCHIVE_DIR="${HOME}/${NAME}/log-archives"
     mkdir -p "$ARCHIVE_DIR"
     local -r CURRENT_DATE="$(date +%Y-%m-%d)"
     local ARCHIVE_FILE="$ARCHIVE_DIR/${CURRENT_DATE}.log.gz"
@@ -107,6 +120,7 @@ log_migrate() {
     > "$SERVER_LOG"
 }
 
+# Sends keystrokes to the server session
 tell_server() {
     log "tell_server" "Running $@"
     tmux send-keys -t "${NAME}-server" "
@@ -114,21 +128,22 @@ $@
 "
 }
 
+# Sends a short 5 second restart warning to the server
 restart_warning_short() {
     log "restart_warning_short" "Starting"
-    if [[ "$(server_running)" ]]; then
+    if server_running; then
         tell_server 'say Warning! Restarting in 5 seconds!'
         sleep 1
-        if [[ "$(server_running)" ]]; then
+        if server_running; then
             tell_server 'say Warning! Restarting in 4 seconds!'
             sleep 1
-            if [[ "$(server_running)" ]]; then
+            if server_running; then
                 tell_server 'say Warning! Restarting in 3 seconds!'
                 sleep 1
-                if [[ "$(server_running)" ]]; then
+                if server_running; then
                     tell_server 'say Warning! Restarting in 2 seconds!'
                     sleep 1
-                    if [[ "$(server_running)" ]]; then
+                    if server_running; then
                         tell_server 'say Warning! Restarting in 1 second!'
                         sleep 1
                     fi
@@ -139,16 +154,39 @@ restart_warning_short() {
     log "restart_warning_short" "Done"
 }
 
+# Sends a long 5 minute restart warning to the server
+restart_warning_short() {
+    log "restart_warning_short" "Starting"
+    if server_running; then
+        tell_server 'say Warning! Restarting in 5 minutes!'
+        sleep 1m
+        if server_running; then
+            tell_server 'say Warning! Restarting in 4 minutes!'
+            sleep 1m
+            if server_running; then
+                tell_server 'say Warning! Restarting in 3 minutes!'
+                sleep 1m
+                if server_running; then
+                    tell_server 'say Warning! Restarting in 2 minutes!'
+                    sleep 1m
+                    if server_running; then
+                        tell_server 'say Warning! Restarting in 1 minute!'
+                        sleep 1m
+                    fi
+                fi
+            fi
+        fi
+    fi
+    log "restart_warning_short" "Done"
+}
+
+# Backs up the server
 backup() {
     log "mc_backup" "Starting"
-    local -r LOG_FILE="$(get_log)"
-    local -r BACKUP_LOCATION="file:///mnt/backup/$(whoami)-${NAME}"
     duplicity --no-encryption \
-        --log-file="$LOG_FILE" \
         --name "${NAME}" \
-        --archive-dir "/mnt/backup/archives" \
         --full-if-older-than 1W \
-        "$HOME" "$BACKUP_LOCATION" &>> "$LOG_FILE"
+        "$STUFF_TO_BACKUP" "$BACKUP_LOCATION" 2>&1 | log_stdin "backup-duplicity-output"
     log "mc_backup" "Done"
 }
 
@@ -181,24 +219,22 @@ get_latest_version() {
 }
 
 script_enabled() {
-    if [[ ! -a "~/.${NAME}-script-disabled" ]]; then
-        echo "true"
-    fi
+    [[ -a "${HOME}/${NAME}/.script-disabled" ]] && return 1 || return 0
 }
 
 disable_script() {
-    if [[ -a "$HOME/.${NAME}-script-disabled" ]]; then
+    if [[ -a "$HOME/${NAME}/.script-disabled" ]]; then
         log "disable_script" "Script already disabled"
     else
         log "disable_script" "Disabling script"
-        touch "$HOME/.${NAME}-script-disabled"
+        touch "$HOME/${NAME}/.script-disabled"
     fi
 }
 
 enable_script() {
-    if [[ -a "$HOME/.${NAME}-script-disabled" ]]; then
+    if [[ -a "$HOME/${NAME}/.script-disabled" ]]; then
         log "enable_script" "Enabling script"
-        rm -f "$HOME/.${NAME}-script-disabled"
+        rm -f "$HOME/${NAME}/.script-disabled"
     else
         log "enable_script" "Script already enabled"
     fi
@@ -261,7 +297,7 @@ kill_server() {
 persistent_start() {
     log "[persistent_start] Starting"
     disable_script
-    while [[ "$(server_running)" ]]; do
+    while server_running; do
         mc "[persistent_start] Server already running"
         sleep 1s
     done
@@ -275,7 +311,7 @@ persistent_start() {
 kill_start() {
     log "[kill_start] Starting"
     kill_server
-    while [[ "$(server_running)" ]]; do
+    while server_running; do
         sleep 1
     done
     start_server
@@ -285,7 +321,7 @@ kill_start() {
 
 # Starts the server!
 start_server() {
-    if [[ "$(server_running)" ]]; then
+    if server_running; then
         log "[start_server] Server already running"
     else
         log "[start_server] Starting server"
@@ -311,12 +347,12 @@ internal_start() {
 
 # Stops the server
 stop_server() {
-    if [[ "$(server_running)" ]]; then
+    if server_running; then
         log "stop_server" "Stopping server"
         tell_server "kickall Server is restarting"
         tell_server "stop"
         timeout="$((120 + $(date '+%s')))"
-        while [[ "$(server_running)" ]]; do
+        while server_running; do
             if [[ "$(date '+%s')" -gt "$timeout" ]]; then
                 kill_server
             fi
@@ -345,3 +381,111 @@ view_log() {
     fi
     tail -n "$LENGTH" "$(get_log)"
 }
+
+### Commmand line function
+
+cmd_help() {
+    echo " ---- mc - ${NAME} ----"
+    echo " status         - Gives the server's status"
+    echo " resume         - Resumes the server session"
+    echo " start-server   - Starts the server"
+    echo " stop-server    - Stops the server"
+    echo " kill-server    - Kills the server"
+    echo " stop-start     - Stops the server, then starts it"
+    echo " kill-start     - Kills the server then starts it"
+    echo " view-log       - Views the script log"
+    echo " backup-script  - Stops the server, backs up, and starts the server"
+    echo " backup         - Backs up the server to the defined backup location"
+    echo " check-script   - Starts it if it isn't online"
+    echo " script-enabled - Checks if the check-script is enabled"
+    echo " enable-script  - Enables the check-script"
+    echo " disable-script - Disable the check-script"
+    echo " ---- Internally used commands ----"
+    echo " update - Downloads the latest spigot version"
+    echo " current-version - Gets the current version of the server"
+    echo " latest-version - Gets the latest spigot version"
+    echo " warning-long - Restart warning long"
+    echo " warning-short - Restart warning short"
+    echo " log-migrate - Migrates the server log"
+    echo " boot - Script to run at boot"
+    echo " spigot-restart - Spigot restart script"
+    echo " internal-start - Internal start script"
+    echo " persistent-start - Waits till the server isn't running, then starts"
+    echo " pre-start-actions - Runs server pre-start actions"
+}
+
+main() {
+    local -r FUNCTION="$1"
+    local -r ARGS="${@:2}"
+    local -r P="[${NAME}]"
+    case "$FUNCTION" in
+        resume)
+            resume ;;
+        status)
+            if server_running; then
+                echo "$P Running!"
+                return 0
+            else
+                echo "$P Not running."
+                return 1
+            fi ;;
+        check-script)
+            server_script ;;
+        log-migrate)
+            log_migrate ;;
+        warning-short)
+            restart_warning_short ;;
+        warning-long)
+            restart_warning_long ;;
+        backup)
+            backup ;;
+        backup-script)
+            backup_script ;;
+        boot)
+            boot ;;
+        current-version)
+            get_current_version ;;
+        latest-version)
+            get_latest_version ;;
+        script-enabled)
+            if script_enabled; then
+                echo "$P Script enabled"
+                return 0
+            else
+                echo "$P Script disabled"
+                return 1
+            fi ;;
+        enable-script)
+            enable_script ;;
+        disable-script)
+            disable_script ;;
+        update)
+            dowload_latest ;;
+        pre-start-actions)
+            pre_start_actions ;;
+        kill-server)
+            kill_server ;;
+        persistent-start)
+            persistent-start ;;
+        kill-start)
+            kill_start ;;
+        start-server)
+            start_server ;;
+        spigot-restart)
+            spigot_restart ;;
+        internal-start)
+            internal_start ;;
+        stop-server)
+            stop_server ;;
+        stop-start)
+            stop_start ;;
+        view-log)
+            view_log ;;
+        help)
+            cmd_help ;;
+        *)
+            echo "$P Unknown argument '${1}'"
+            cmd_help ;;
+    esac
+}
+main "$@"
